@@ -10,7 +10,7 @@ const toOutput = (value) => {
 const initialForm = () => ({
     id: "biz_" + Math.random().toString(36).substring(2, 7),
     owner: "0x64dc46C67dDd6842a9fBc6Daf50160b71AF412cf",
-    name: "Stellar Nexus",
+    name: "Nero Nexus",
     category: "technology",
     description: "Next Generation Directory",
     contact: "nexus@nero.io",
