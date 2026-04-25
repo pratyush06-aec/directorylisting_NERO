@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 
 // Default placeholder address
 export const CONTRACT_ADDRESS = "0xadb2582Cd6866D647Bd65CAae001FfcdcCeB8fc5";
+export const REQUIRED_ADDRESS = "0x64dc46C67dDd6842a9fBc6Daf50160b71AF412cf";
 
 export const NERO_CHAIN = {
     chainId: "0x2B1", // 689 in hex

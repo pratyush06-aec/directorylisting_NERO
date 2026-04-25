@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { checkConnection, connectWallet, createListing, updateListing, verifyListing, deactivateListing, rateListing, getListing, listAll } from "../lib/nero.js";
+import { checkConnection, connectWallet, createListing, updateListing, verifyListing, deactivateListing, rateListing, getListing, listAll, REQUIRED_ADDRESS } from "../lib/nero.js";
 import "./App.css";
 
 const toOutput = (value) => {
@@ -8,13 +8,13 @@ const toOutput = (value) => {
 };
 
 const initialForm = () => ({
-    id: "biz1",
+    id: "biz_" + Math.random().toString(36).substring(2, 7),
     owner: "0x64dc46C67dDd6842a9fBc6Daf50160b71AF412cf",
     name: "Stellar Nexus",
     category: "technology",
     description: "Next Generation Directory",
-    contact: "nexus@stellar.io",
-    website: "https://nexus.stellar.io",
+    contact: "nexus@nero.io",
+    website: "https://nexus.nero.io",
     location: "Decentralized City",
     verifier: "",
     rater: "",
@@ -65,24 +65,36 @@ export default function App() {
         const init = async () => {
             const user = await checkConnection();
             if (user) {
-                setConnectedAddress(user.publicKey);
-                setWalletState(`Wallet Connected: ${user.publicKey}`);
-                setForm(prev => ({
-                    ...prev,
-                    owner: prev.owner || user.publicKey,
-                    verifier: prev.verifier || user.publicKey,
-                    rater: prev.rater || user.publicKey
-                }));
+                const isMatch = user.publicKey.toLowerCase().trim() === REQUIRED_ADDRESS.toLowerCase().trim();
+                if (isMatch) {
+                    setConnectedAddress(user.publicKey);
+                    setWalletState(`Wallet Connected: ${user.publicKey}`);
+                    setForm(prev => ({
+                        ...prev,
+                        owner: user.publicKey,
+                        verifier: prev.verifier || user.publicKey,
+                        rater: prev.rater || user.publicKey
+                    }));
+                } else {
+                    console.error("Init Mismatch:", { detected: user.publicKey, required: REQUIRED_ADDRESS });
+                    setConnectedAddress("WRONG_ACCOUNT");
+                    setWalletState(`Error: Please switch to ${REQUIRED_ADDRESS}`);
+                }
             }
         };
         init();
 
         if (window.ethereum) {
             const handleAccounts = (accounts) => {
-                if (accounts.length > 0) {
-                    setConnectedAddress(accounts[0]);
-                    setWalletState(`Wallet Connected: ${accounts[0]}`);
-                    setForm(prev => ({ ...prev, owner: accounts[0] }));
+                const target = accounts.find(a => a.toLowerCase().trim() === REQUIRED_ADDRESS.toLowerCase().trim());
+                if (target) {
+                    setConnectedAddress(target);
+                    setWalletState(`Wallet Connected: ${target}`);
+                    setForm(prev => ({ ...prev, owner: target }));
+                } else if (accounts.length > 0) {
+                    console.error("Mismatch:", { detected: accounts[0], required: REQUIRED_ADDRESS });
+                    setConnectedAddress("WRONG_ACCOUNT");
+                    setWalletState(`Error: Please switch to ${REQUIRED_ADDRESS}`);
                 } else {
                     setConnectedAddress("");
                     setWalletState("Wallet: not connected");
@@ -148,17 +160,26 @@ export default function App() {
     const onConnect = withLoading("connect", () => runAction(async () => {
         const user = await connectWallet();
         if (user) {
-            setConnectedAddress(user.publicKey);
-            setForm((prev) => ({
-                ...prev,
-                owner: prev.owner || user.publicKey,
-                verifier: prev.verifier || user.publicKey,
-                rater: prev.rater || user.publicKey,
-            }));
+            const isMatch = user.publicKey.toLowerCase().trim() === REQUIRED_ADDRESS.toLowerCase().trim();
+            if (isMatch) {
+                setConnectedAddress(user.publicKey);
+                setForm((prev) => ({
+                    ...prev,
+                    owner: user.publicKey,
+                    verifier: prev.verifier || user.publicKey,
+                    rater: prev.rater || user.publicKey,
+                }));
+                const next = `Wallet Connected: ${user.publicKey}`;
+                setWalletState(next);
+                return next;
+            } else {
+                console.error("Connect Mismatch:", { detected: user.publicKey, required: REQUIRED_ADDRESS });
+                setConnectedAddress("WRONG_ACCOUNT");
+                setWalletState(`Error: Please switch to ${REQUIRED_ADDRESS}`);
+                throw new Error(`Unauthorized Account: Detected ${user.publicKey}, but required ${REQUIRED_ADDRESS}`);
+            }
         }
-        const next = user ? `Wallet Connected: ${user.publicKey}` : "Wallet: not connected";
-        setWalletState(next);
-        return next;
+        return "Wallet: not connected";
     }));
 
     const onCreate = withLoading("create", () => runAction(async () => createListing({
@@ -255,10 +276,16 @@ export default function App() {
                 </div>
                 <div className="wallet-status" style={{ position: 'relative', zIndex: 2 }}>
                     {isConnected ? (
-                        <div className="wallet-pill active">
-                            <span className="dot connected"></span>
-                            <span className="addr">{truncAddr}</span>
-                        </div>
+                        <div className={`wallet-pill glass-panel ${connectedAddress === "WRONG_ACCOUNT" ? "status-error" : ""}`}>
+                        <span className={`wallet-status-dot ${connectedAddress === "WRONG_ACCOUNT" ? "bg-error" : ""}`}></span>
+                        <span className="wallet-address">
+                            {connectedAddress === "WRONG_ACCOUNT" 
+                                ? "WRONG ACCOUNT" 
+                                : connectedAddress 
+                                    ? `${connectedAddress.slice(0, 6)}...${connectedAddress.slice(-4)}` 
+                                    : "Not Connected"}
+                        </span>
+                    </div>
                     ) : (
                         <div className="wallet-pill offline">
                             <span className="dot disconnected"></span>
@@ -451,4 +478,4 @@ export default function App() {
             </div>
         </div>
     );
-}
+}

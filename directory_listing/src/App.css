@@ -564,6 +564,21 @@ button:disabled {
 .status-success .json-output { color: var(--success); }
 
 /* Enhanced Success Glow */
+.status-error {
+    border-color: #ff4d4d !important;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.4) !important;
+}
+
+.bg-error {
+    background-color: #ff4d4d !important;
+    box-shadow: 0 0 10px #ff4d4d !important;
+}
+
+.notification-toast.error {
+    background: rgba(255, 77, 77, 0.1);
+    border: 1px solid #ff4d4d;
+}
+
 .status-success.console-window {
   border-color: var(--success);
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
