@@ -9,7 +9,7 @@ const toOutput = (value) => {
 
 const initialForm = () => ({
     id: "biz1",
-    owner: "",
+    owner: "0x64dc46C67dDd6842a9fBc6Daf50160b71AF412cf",
     name: "Stellar Nexus",
     category: "technology",
     description: "Next Generation Directory",
